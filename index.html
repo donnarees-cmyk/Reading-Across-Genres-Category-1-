@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category 1: Reading Across Genres & Vocabulary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>.tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: bold; }</style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+    <header class="bg-indigo-700 text-white p-6 shadow-lg">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <span class="bg-indigo-900 text-indigo-200 text-xs font-semibold px-2.5 py-1 rounded-full uppercase">Category 1 Review</span>
+                <h1 class="text-2xl font-bold mt-1">Reading Across Genres & Vocabulary</h1>
+            </div>
+            <div class="bg-indigo-800 px-4 py-2 rounded-lg border border-indigo-600 text-center">
+                <p class="text-xs text-indigo-200 uppercase font-semibold">Mastery Score</p>
+                <p id="score-display" class="text-2xl font-black text-yellow-300">0 / 5</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+        <div class="flex overflow-x-auto bg-white rounded-xl shadow-sm border p-2 gap-2">
+            <button onclick="switchStandard(0)" id="tab-0" class="tab-btn tab-active px-4 py-2 rounded-lg text-sm whitespace-nowrap">ELA.6.R.3.1 (Figurative Lang)</button>
+            <button onclick="switchStandard(1)" id="tab-1" class="tab-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap">ELA.6.R.3.4 (Rhetoric)</button>
+            <button onclick="switchStandard(2)" id="tab-2" class="tab-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap">ELA.6.R.3.3 (Comparative)</button>
+            <button onclick="switchStandard(3)" id="tab-3" class="tab-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap">ELA.6.V.1.2 (Roots & Affixes)</button>
+            <button onclick="switchStandard(4)" id="tab-4" class="tab-btn px-4 py-2 rounded-lg text-sm whitespace-nowrap">ELA.6.V.1.3 (Context & Connotation)</button>
+        </div>
+
+        <!-- BENCHMARK TUTORIAL & ANCHOR CHART AT TOP -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center gap-2 text-indigo-900 font-bold text-lg">
+                <i class="fas fa-graduation-cap text-indigo-600"></i>
+                <h2 id="standard-title">Standard Tutorial Loading...</h2>
+            </div>
+            <div class="bg-white p-4 rounded-lg border border-indigo-100 text-sm md:text-base leading-relaxed" id="standard-teaching"></div>
+        </div>
+
+        <!-- READ ALOUD CONTROLS WITH VOICE SELECTOR -->
+        <div class="bg-white rounded-xl shadow-sm border p-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <button onclick="playTTS()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-volume-up"></i> Read Aloud
+                </button>
+                <button onclick="pauseTTS()" class="bg-slate-200 text-slate-700 px-3 py-2 rounded-lg"><i class="fas fa-pause"></i> Pause</button>
+                <button onclick="stopTTS()" class="bg-slate-200 text-slate-700 px-3 py-2 rounded-lg"><i class="fas fa-stop"></i> Stop</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-slate-500 uppercase"><i class="fas fa-user-gear"></i> Voice:</label>
+                    <select id="voice-select" onchange="stopTTS()" class="bg-slate-100 border rounded px-2 py-1 text-sm max-w-[200px] font-medium"></select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-semibold text-slate-500 uppercase">Speed:</label>
+                    <select id="speed-select" onchange="updateSpeed()" class="bg-slate-100 border rounded px-2 py-1 text-sm">
+                        <option value="0.8">0.8x (Slow)</option>
+                        <option value="1.0" selected>1.0x (Normal)</option>
+                        <option value="1.2">1.2x (Fast)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- PASSAGE & QUESTION -->
+        <div class="bg-white border rounded-xl shadow-sm p-6 space-y-6">
+            <div>
+                <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider block mb-1">Practice Passage</span>
+                <div id="passage-text" class="bg-slate-50 p-4 rounded-lg border text-slate-800 font-serif leading-relaxed text-base whitespace-pre-line"></div>
+            </div>
+            <hr/>
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Question</span>
+                <p id="question-text" class="text-slate-900 font-semibold text-lg mb-4"></p>
+                <div id="options-container" class="space-y-3"></div>
+            </div>
+            <div id="feedback-box" class="hidden rounded-xl p-5"></div>
+        </div>
+    </main>
+
+    <script>
+        const standards = [
+            {
+                code: "ELA.6.R.3.1",
+                title: "Figurative Language & Tone",
+                teaching: "<b>TUTORIAL LESSON:</b> Authors use figurative language (similes, metaphors, hyperbole) to set the <b>tone</b> (the author's attitude).<br/><br/><b>Key Strategy:</b> Ask yourself—<i>Does the word choice paint a warm, cozy picture or a tense, scary one?</i>",
+                passage: "The old library was a treasure chest overflowing with forgotten secrets. Dust motes danced silently in yellow shafts of sunlight, and the aroma of ancient paper wrapped around Maya like a warm, comforting blanket.",
+                question: "What does the metaphor 'The old library was a treasure chest' reveal about Maya's feelings?",
+                options: [
+                    { text: "She believes the library contains real gold and silver coins.", correct: false, explain: "Incorrect. Metaphors are figurative, not literal." },
+                    { text: "She views the library as a valuable place full of wonderful discoveries.", correct: true, explain: "Spot on! Comparing the library to a treasure chest shows she values the rich knowledge inside." },
+                    { text: "She thinks the library is dark, locked away, and difficult to enter.", correct: false, explain: "Incorrect. A treasure chest highlights value, not difficulty." },
+                    { text: "She feels overwhelmed by how messy and cluttered the room is.", correct: false, explain: "Incorrect. The passage paints a cozy, inviting atmosphere." }
+                ]
+            },
+            {
+                code: "ELA.6.R.3.4",
+                title: "Understanding Rhetoric (Logos, Ethos, Pathos)",
+                teaching: "<b>TUTORIAL LESSON:</b> Persuasive texts use three main appeals:<br/>• <b>Logos:</b> Logic, statistics, and facts.<br/>• <b>Ethos:</b> Credibility, expert authority, and trust.<br/>• <b>Pathos:</b> Emotions and feelings.",
+                passage: "Dr. Aris, a chief nutritionist with 20 years of clinical research, notes: 'Over 78% of students who eat a balanced breakfast show a 15% increase in focus during morning exams.'",
+                question: "Which combination of rhetorical appeals is primarily used in this excerpt?",
+                options: [
+                    { text: "Pathos alone, because it makes students feel fearful of failing exams.", correct: false, explain: "Incorrect. The passage presents objective data rather than emotional warnings." },
+                    { text: "Logos (statistics) and Ethos (Dr. Aris's expert authority).", correct: true, explain: "Correct! Citing 78% and 15% provides Logos (data), while Dr. Aris's credentials provide Ethos (credibility)." },
+                    { text: "Ethos alone, because it focuses strictly on school rules.", correct: false, explain: "Incorrect. The statistics provide clear logical evidence (Logos)." },
+                    { text: "Pathos and Logos, by sharing an emotional story about Dr. Aris.", correct: false, explain: "Incorrect. There is no emotional narrative here." }
+                ]
+            },
+            {
+                code: "ELA.6.R.3.3",
+                title: "Comparative Analysis Across Time Periods",
+                teaching: "<b>TUTORIAL LESSON:</b> When comparing texts from different historical eras, look for common themes (like travel, courage, or technology) and analyze how context shapes each perspective.",
+                passage: "Passage A (1895): 'We traveled by horse-drawn carriage through deep mud, praying our wooden wheels would survive the journey.'\nPassage B (2024): 'With a tap on my smartphone, the autonomous vehicle pulled up silently, calculating the fastest satellite-guided route.'",
+                question: "How do both passages address the shared theme of human travel?",
+                options: [
+                    { text: "Both passages emphasize that travel in every era is equally terrifying.", correct: false, explain: "Incorrect. Passage B describes smooth modern tech, not fear." },
+                    { text: "Both demonstrate how humans rely on the innovations of their era to overcome travel distance.", correct: true, explain: "Excellent! Both passages show how people use the best available technology of their time." },
+                    { text: "Passage A proves old transportation was superior to modern cars.", correct: false, explain: "Incorrect. Passage A details difficulty with mud and breaking wheels." },
+                    { text: "Passage B shows that modern travelers no longer care about destination times.", correct: false, explain: "Incorrect. Passage B specifically mentions calculating the fastest route." }
+                ]
+            },
+            {
+                code: "ELA.6.V.1.2",
+                title: "Greek & Latin Roots and Affixes",
+                teaching: "<b>TUTORIAL LESSON:</b> Deconstruct unknown academic words using root meanings.<br/>• <b>Bio</b> = Life | <b>Lumine</b> = Light | <b>Geo</b> = Earth | <b>Graph</b> = Write",
+                passage: "The oceanographer used a specialized submersible device to photograph bioluminescent creatures living in the deepest ocean trenches.",
+                question: "Using your knowledge of the root 'bio' (life) and 'lumine' (light), what does 'bioluminescent' mean?",
+                options: [
+                    { text: "Living organisms that produce their own natural light.", correct: true, explain: "Correct! 'Bio' (living organism) + 'lumine' (light) = living things that emit light!" },
+                    { text: "Electric lights powered by underwater battery power packs.", correct: false, explain: "Incorrect. 'Bio' specifically refers to living organisms." },
+                    { text: "Deep underwater creatures that cannot survive near light.", correct: false, explain: "Incorrect. 'Lumine' indicates glowing/light production." },
+                    { text: "Fossils preserved under heat and pressure in ocean rocks.", correct: false, explain: "Incorrect. Bioluminescence relates to active living creatures emitting light." }
+                ]
+            },
+            {
+                code: "ELA.6.V.1.3",
+                title: "Context & Connotation",
+                teaching: "<b>TUTORIAL LESSON:</b> Words have two types of meaning:<br/>• <b>Denotation:</b> The literal dictionary definition.<br/>• <b>Connotation:</b> The emotional association (positive, negative, or neutral).",
+                passage: "Instead of calling the old collector 'stingy', the historian praised him as 'frugal', admiring how carefully he preserved every penny to build the town museum.",
+                question: "How does the word 'frugal' differ in connotation from 'stingy' in this passage?",
+                options: [
+                    { text: "'Frugal' has a positive connotation of being wise with money, while 'stingy' feels selfish.", correct: true, explain: "Bingo! 'Frugal' implies smart spending, whereas 'stingy' carries a negative, greedy tone." },
+                    { text: "'Frugal' means extremely rich, while 'stingy' means living in poverty.", correct: false, explain: "Incorrect. Neither word indicates wealth status." },
+                    { text: "Both words mean the exact same thing with identical emotional tones.", correct: false, explain: "Incorrect. The passage contrasts praising someone as frugal versus insulting them as stingy." },
+                    { text: "'Frugal' carries a negative tone of extreme greed.", correct: false, explain: "Incorrect. The passage notes the historian 'praised' him as frugal." }
+                ]
+            }
+        ];
+
+        let currentIdx = 0;
+        let answered = new Array(standards.length).fill(false);
+        let score = 0;
+        let synth = window.speechSynthesis;
+        let availableVoices = [];
+
+        function initVoices() {
+            if(!('speechSynthesis' in window)) return;
+            availableVoices = synth.getVoices();
+            const voiceSelect = document.getElementById('voice-select');
+            voiceSelect.innerHTML = '';
+
+            // Prioritize Google US English or Natural lifelike voices
+            let googleVoices = availableVoices.filter(v => v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Samantha"));
+            let listToUse = googleVoices.length > 0 ? googleVoices : availableVoices;
+
+            listToUse.forEach((v, i) => {
+                const opt = document.createElement('option');
+                opt.value = v.name;
+                opt.innerText = v.name.replace('Google', 'Google Voice').replace('Microsoft', 'Natural');
+                if (v.name.includes("Google US English") || v.name.includes("Natural") || (i === 0 && !voiceSelect.value)) {
+                    opt.selected = true;
+                }
+                voiceSelect.appendChild(opt);
+            });
+        }
+
+        if ('speechSynthesis' in window) {
+            synth.onvoiceschanged = initVoices;
+            initVoices();
+        }
+
+        function loadStandard(index) {
+            currentIdx = index;
+            const std = standards[index];
+            document.querySelectorAll('.tab-btn').forEach((b, i) => i === index ? b.classList.add('tab-active') : b.classList.remove('tab-active'));
+            document.getElementById('standard-title').innerText = `${std.code} - ${std.title}`;
+            document.getElementById('standard-teaching').innerHTML = std.teaching;
+            document.getElementById('passage-text').innerText = std.passage;
+            document.getElementById('question-text').innerText = std.question;
+
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            std.options.forEach((opt, oIdx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border hover:border-indigo-400 hover:bg-indigo-50/50 transition flex items-start gap-3 font-medium";
+                btn.onclick = () => selectOption(oIdx);
+                btn.innerHTML = `<span class="bg-slate-100 border text-slate-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">${String.fromCharCode(65 + oIdx)}</span> <span>${opt.text}</span>`;
+                optsContainer.appendChild(btn);
+            });
+            document.getElementById('feedback-box').className = "hidden rounded-xl p-5";
+            stopTTS();
+        }
+
+        function selectOption(oIdx) {
+            const std = standards[currentIdx];
+            const selected = std.options[oIdx];
+            const fbBox = document.getElementById('feedback-box');
+            fbBox.className = "rounded-xl p-5";
+
+            if(selected.correct) {
+                fbBox.classList.add('bg-emerald-50', 'border', 'border-emerald-200', 'text-emerald-900');
+                fbBox.innerHTML = `<div class="flex items-center gap-2 font-bold text-lg mb-1 text-emerald-800"><i class="fas fa-check-circle"></i> Outstanding Job!</div><p>${selected.explain}</p>`;
+                if(!answered[currentIdx]) { score++; answered[currentIdx] = true; document.getElementById('score-display').innerText = `${score} / ${standards.length}`; }
+            } else {
+                fbBox.classList.add('bg-rose-50', 'border', 'border-rose-200', 'text-rose-900');
+                fbBox.innerHTML = `<div class="flex items-center gap-2 font-bold text-lg mb-1 text-rose-800"><i class="fas fa-exclamation-circle"></i> Corrective Re-Teaching</div><p>${selected.explain}</p>`;
+            }
+            speakText(selected.explain);
+        }
+
+        function switchStandard(idx) { loadStandard(idx); }
+
+        function speakText(text) {
+            stopTTS();
+            if(!('speechSynthesis' in window)) return;
+            const textToSpeak = text || `${standards[currentIdx].teaching.replace(/<[^>]*>/g, '')}. Passage: ${standards[currentIdx].passage}. Question: ${standards[currentIdx].question}`;
+            const utt = new SpeechSynthesisUtterance(textToSpeak);
+            utt.rate = parseFloat(document.getElementById('speed-select').value);
+            
+            const selectedVoiceName = document.getElementById('voice-select').value;
+            const chosenVoice = availableVoices.find(v => v.name === selectedVoiceName);
+            if(chosenVoice) utt.voice = chosenVoice;
+
+            synth.speak(utt);
+        }
+
+        function playTTS() { speakText(); }
+        function pauseTTS() { if(synth.speaking && !synth.paused) synth.pause(); else if(synth.paused) synth.resume(); }
+        function stopTTS() { if(synth.speaking) synth.cancel(); }
+        function updateSpeed() { if(synth.speaking) { stopTTS(); playTTS(); } }
+        loadStandard(0);
+    </script>
+</body>
+</html>
